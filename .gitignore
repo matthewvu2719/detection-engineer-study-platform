@@ -1,0 +1,36 @@
+# ── Python (backend) ──────────────────────────────────────────
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# ── Environment variables (NEVER commit these) ─────────────────
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env.local
+
+# ── Next.js (frontend) ─────────────────────────────────────────
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.vercel/
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# ── OS ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editors ────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
