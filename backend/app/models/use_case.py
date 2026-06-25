@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Text, Boolean, Integer, ForeignKey, CheckConstraint
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMPTZ
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import TIMESTAMP
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -46,11 +47,11 @@ class UseCase(Base):
 
     enrichment_status = Column(Text, default="pending")
     enrichment_error = Column(Text)
-    enriched_at = Column(TIMESTAMPTZ)
+    enriched_at = Column(TIMESTAMP(timezone=True))
 
     is_public = Column(Boolean, default=False)
-    created_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMPTZ, server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     investigation_steps = relationship("InvestigationStep", back_populates="use_case", cascade="all, delete-orphan", order_by="InvestigationStep.step_order")
     investigation_queries = relationship("InvestigationQuery", back_populates="use_case", cascade="all, delete-orphan", order_by="InvestigationQuery.query_order")
@@ -86,7 +87,7 @@ class InvestigationStep(Base):
     title = Column(Text, nullable=False)
     description = Column(Text)
     pivot_type = Column(Text)
-    created_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
 
     use_case = relationship("UseCase", back_populates="investigation_steps")
 
@@ -100,6 +101,6 @@ class InvestigationQuery(Base):
     description = Column(Text)
     kql = Column(Text, nullable=False)
     query_order = Column(Integer, default=0)
-    created_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
 
     use_case = relationship("UseCase", back_populates="investigation_queries")

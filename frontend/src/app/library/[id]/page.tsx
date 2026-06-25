@@ -44,8 +44,8 @@ export default async function UseCaseDetailPage({ params }: PageProps) {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back + header */}
       <div>
-        <Button variant="ghost" size="sm" asChild className="mb-4 -ml-2 gap-1">
-          <Link href="/library"><ArrowLeft className="h-4 w-4" /> Library</Link>
+        <Button variant="ghost" size="sm" render={<Link href="/library" />} nativeButton={false} className="mb-4 -ml-2 gap-1">
+          <ArrowLeft className="h-4 w-4" /> Library
         </Button>
 
         <div className="flex flex-wrap items-start gap-3 justify-between">
@@ -309,8 +309,8 @@ export default async function UseCaseDetailPage({ params }: PageProps) {
           )}
 
           <div className="pt-2">
-            <Button asChild variant="outline">
-              <Link href={`/lab?use_case_id=${uc.id}`}>Practice KQL from this use case →</Link>
+            <Button variant="outline" render={<Link href={`/lab?use_case_id=${uc.id}`} />} nativeButton={false}>
+              Practice KQL from this use case →
             </Button>
           </div>
         </TabsContent>

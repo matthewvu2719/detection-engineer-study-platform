@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Text, Boolean
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMPTZ
+from sqlalchemy import Column, Text, Boolean, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
 
@@ -13,5 +13,5 @@ class User(Base):
     clerk_id = Column(Text, unique=True, nullable=False)
     email = Column(Text, unique=True, nullable=False)
     display_name = Column(Text)
-    created_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
-    updated_at = Column(TIMESTAMPTZ, server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

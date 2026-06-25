@@ -8,14 +8,30 @@ import type {
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000/api'
 
+export class ApiError extends Error {
+  constructor(public status: number, message: string, public detail?: Record<string, unknown>) {
+    super(message)
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json', ...init?.headers },
     ...init,
   })
   if (!res.ok) {
-    const body = await res.text()
-    throw new Error(`API ${res.status}: ${body}`)
+    let detail: Record<string, unknown> | undefined
+    let message = `API error ${res.status}`
+    try {
+      const body = await res.json()
+      if (typeof body.detail === 'object') {
+        detail = body.detail
+        message = body.detail.message ?? message
+      } else {
+        message = body.detail ?? message
+      }
+    } catch {}
+    throw new ApiError(res.status, message, detail)
   }
   return res.json() as Promise<T>
 }

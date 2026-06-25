@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Text, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMPTZ
+from sqlalchemy import Column, Text, Integer, ForeignKey, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
@@ -24,6 +24,6 @@ class PracticeMemory(Base):
 
     embedding = Column(Vector(1536))
 
-    created_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
 
     session = relationship("PracticeSession", back_populates="memory")

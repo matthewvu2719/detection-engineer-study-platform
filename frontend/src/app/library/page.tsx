@@ -27,8 +27,8 @@ async function UseCaseGrid({ searchParams }: { searchParams: Record<string, stri
       <div className="text-center py-20 text-muted-foreground">
         <p className="text-lg">No use cases found.</p>
         <p className="text-sm mt-1">Try adjusting your filters or add a new use case.</p>
-        <Button asChild className="mt-4">
-          <Link href="/add-use-case">Add your first use case</Link>
+        <Button render={<Link href="/add-use-case" />} nativeButton={false} className="mt-4">
+          Add your first use case
         </Button>
       </div>
     )
@@ -66,10 +66,8 @@ export default async function LibraryPage({ searchParams }: PageProps) {
           <h1 className="text-2xl font-bold">Use Case Library</h1>
           <p className="text-muted-foreground mt-1">Browse and study your enriched detection use cases.</p>
         </div>
-        <Button asChild>
-          <Link href="/add-use-case" className="gap-2">
-            <Plus className="h-4 w-4" /> Add Use Case
-          </Link>
+        <Button render={<Link href="/add-use-case" />} nativeButton={false} className="gap-2">
+          <Plus className="h-4 w-4" /> Add Use Case
         </Button>
       </div>
 

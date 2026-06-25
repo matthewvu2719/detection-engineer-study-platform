@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Text, Integer, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID, JSONB, TIMESTAMPTZ
+from sqlalchemy import Column, Text, Integer, ForeignKey, TIMESTAMP
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -23,7 +23,7 @@ class PracticeChallenge(Base):
     reference_kql = Column(Text, nullable=False)
     tags = Column(JSONB, default=list)
 
-    created_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
 
     sessions = relationship("PracticeSession", back_populates="challenge")
 
@@ -37,8 +37,8 @@ class PracticeSession(Base):
 
     difficulty = Column(Text, nullable=False)
     submitted_kql = Column(Text, nullable=False)
-    started_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
-    submitted_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
+    started_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
+    submitted_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
 
     challenge = relationship("PracticeChallenge", back_populates="sessions")
     evaluation = relationship("Evaluation", back_populates="session", uselist=False)
@@ -68,6 +68,6 @@ class Evaluation(Base):
     learn_modules = Column(JSONB, default=list)
     learning_summary = Column(Text, nullable=False)
 
-    created_at = Column(TIMESTAMPTZ, server_default=func.now(), nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
 
     session = relationship("PracticeSession", back_populates="evaluation")

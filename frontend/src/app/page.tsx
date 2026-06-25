@@ -61,11 +61,9 @@ export default function Home() {
                 <CardDescription>{mod.description}</CardDescription>
               </CardHeader>
               <CardContent className="mt-auto pt-0">
-                <Button asChild className="w-full gap-2">
-                  <Link href={mod.href}>
-                    {mod.cta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                <Button render={<Link href={mod.href} />} nativeButton={false} className="w-full gap-2">
+                  {mod.cta}
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>

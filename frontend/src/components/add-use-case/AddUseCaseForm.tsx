@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 
 const SEVERITIES = ['Informational', 'Low', 'Medium', 'High']
 const CATEGORIES = ['Identity', 'Network', 'Endpoint', 'Cloud', 'Email', 'Application']
@@ -39,7 +39,7 @@ export function AddUseCaseForm() {
     setForm((f) => ({ ...f, [field]: value }))
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!form.title || !form.alert_name || !form.analytics_rule_kql) {
       toast.error('Title, Alert Name, and KQL are required.')
@@ -66,7 +66,17 @@ export function AddUseCaseForm() {
       toast.success('Use case created! AI enrichment is running in the background.')
       router.push(`/library/${uc.id}`)
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : 'Something went wrong.')
+      if (err instanceof ApiError && err.status === 409 && err.detail?.existing_id) {
+        toast.warning('This KQL rule already exists in your library.', {
+          action: {
+            label: 'View it',
+            onClick: () => router.push(`/library/${err.detail!.existing_id}`),
+          },
+          duration: 8000,
+        })
+      } else {
+        toast.error(err instanceof Error ? err.message : 'Something went wrong.')
+      }
     } finally {
       setLoading(false)
     }
@@ -150,7 +160,7 @@ export function AddUseCaseForm() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Severity</Label>
-              <Select value={form.severity} onValueChange={(v) => set('severity', v)}>
+              <Select value={form.severity || undefined} onValueChange={(v) => set('severity', v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select severity" />
                 </SelectTrigger>
@@ -163,7 +173,7 @@ export function AddUseCaseForm() {
             </div>
             <div className="space-y-2">
               <Label>Category</Label>
-              <Select value={form.category} onValueChange={(v) => set('category', v)}>
+              <Select value={form.category || undefined} onValueChange={(v) => set('category', v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -176,7 +186,7 @@ export function AddUseCaseForm() {
             </div>
             <div className="space-y-2">
               <Label>Difficulty</Label>
-              <Select value={form.difficulty} onValueChange={(v) => set('difficulty', v)}>
+              <Select value={form.difficulty || undefined} onValueChange={(v) => set('difficulty', v)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>

@@ -22,6 +22,16 @@ async def create_use_case(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
+    existing = await db.execute(
+        select(UseCase).where(UseCase.analytics_rule_kql == payload.analytics_rule_kql)
+    )
+    duplicate = existing.scalar_one_or_none()
+    if duplicate:
+        raise HTTPException(
+            status_code=409,
+            detail={"message": "A use case with this KQL already exists.", "existing_id": str(duplicate.id)},
+        )
+
     use_case = UseCase(
         title=payload.title,
         alert_name=payload.alert_name,

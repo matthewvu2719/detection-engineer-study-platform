@@ -67,11 +67,11 @@ Analyze the provided learning summaries and identify:
 - Patterns in their mistakes
 
 Return a JSON object:
-{
+{{
   "weak_concepts": ["concept1", "concept2"],
   "strong_concepts": ["concept1", "concept2"],
   "coaching_notes": "Brief summary of what to focus on in the next challenge"
-}"""
+}}"""
 
 
 WEAKNESS_ANALYSIS_HUMAN = """Here are the student's recent practice session summaries (most recent first):
@@ -96,7 +96,7 @@ Difficulty: {difficulty}
 - Hard: complex correlation, multiple tables, performance-conscious logic
 
 Return a single valid JSON object:
-{
+{{
   "scenario": "Detailed attack scenario description",
   "objectives": ["objective 1", "objective 2"],
   "available_tables": ["Table1", "Table2"],
@@ -104,7 +104,7 @@ Return a single valid JSON object:
   "hints": ["subtle hint", "more specific hint", "direct hint"],
   "reference_kql": "// Full KQL solution with inline comments\\nTableName\\n| where ...",
   "tags": ["tag1", "tag2"]
-}"""
+}}"""
 
 
 CHALLENGE_AGENT_HUMAN = """Generate a {difficulty} Microsoft Sentinel KQL detection challenge.
@@ -129,7 +129,7 @@ Be fair and specific — reference exact lines from the student's query.
 A score above 80 means the query would work well in production.
 
 Your final message MUST be a single valid JSON object:
-{
+{{
   "overall_score": 0-100,
   "detection_logic_score": 0-100,
   "query_structure_score": 0-100,
@@ -142,9 +142,9 @@ Your final message MUST be a single valid JSON object:
   "suggested_improvements": ["Concrete improvement with example KQL snippet"],
   "reference_solution": "// Reference KQL with inline comments explaining each section",
   "recommended_concepts": ["concept1", "concept2"],
-  "learn_modules": [{"title": "...", "url": "...", "reason": "..."}],
+  "learn_modules": [{{"title": "...", "url": "...", "reason": "..."}}],
   "learning_summary": "2-3 sentence summary: what they got right, what they missed, what to study next."
-}"""
+}}"""
 
 
 EVALUATOR_AGENT_HUMAN = """Evaluate this KQL submission.
