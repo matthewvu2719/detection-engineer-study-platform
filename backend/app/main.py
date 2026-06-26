@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import get_settings
+from app.models import User, UseCase, PracticeSession, Evaluation, PracticeMemory  # noqa: F401 — registers all models with Base.metadata
 from app.routers import use_cases, practice, health
 
 settings = get_settings()

@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2, Lightbulb, Send, RotateCcw, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
+import Editor from '@monaco-editor/react'
+import { registerKqlCompletions } from '@/lib/kql-completions'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -187,12 +188,30 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
               Get hint ({challenge.hints.length - hintIndex} left)
             </Button>
           </div>
-          <Textarea
-            placeholder="// Write your Sentinel KQL detection query here..."
-            className="font-mono text-sm min-h-[200px]"
-            value={kql}
-            onChange={(e) => setKql(e.target.value)}
-          />
+          <div className="border border-border rounded-md overflow-hidden">
+            <Editor
+              height="280px"
+              language="kusto"
+              theme="vs-dark"
+              value={kql}
+              onChange={(value) => setKql(value ?? '')}
+              onMount={(_, monaco) => registerKqlCompletions(monaco)}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: 'on',
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                automaticLayout: true,
+                tabSize: 4,
+                padding: { top: 12, bottom: 12 },
+                quickSuggestions: { other: true, comments: false, strings: false },
+                suggestOnTriggerCharacters: true,
+                wordBasedSuggestions: 'off',
+                suggest: { showWords: false },
+              }}
+            />
+          </div>
         </div>
 
         <Button onClick={handleSubmit} disabled={submitting || !kql.trim()} size="lg" className="w-full gap-2">
