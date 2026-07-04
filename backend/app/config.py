@@ -11,6 +11,7 @@ class Settings(BaseSettings):
 
     openai_api_key: str
     openai_model: str = "gpt-4o"
+    openai_enrichment_model: str = "gpt-4o-mini"
     openai_embedding_model: str = "text-embedding-3-small"
 
     redis_url: str = "redis://localhost:6379/0"

@@ -95,12 +95,12 @@ async def generate_challenge(
         source_use_case_id=source_use_case_id,
         source_type=source_type,
         difficulty=difficulty,
-        scenario=data["scenario"],
+        scenario=data.get("scenario", "No scenario provided."),
         objectives=data.get("objectives", []),
         available_tables=data.get("available_tables", []),
         expected_entities=data.get("expected_entities", []),
         hints=data.get("hints", []),
-        reference_kql=data["reference_kql"],
+        reference_kql=data.get("reference_kql", "// No reference solution provided"),
         tags=data.get("tags", []),
     )
 

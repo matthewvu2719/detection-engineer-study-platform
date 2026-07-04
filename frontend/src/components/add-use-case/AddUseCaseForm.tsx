@@ -21,8 +21,8 @@ export function AddUseCaseForm() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    if (!title.trim() || !kql.trim()) {
-      toast.error('Title and KQL rule are required.')
+    if (!title.trim()) {
+      toast.error('Title is required.')
       return
     }
 
@@ -30,7 +30,7 @@ export function AddUseCaseForm() {
     try {
       const uc = await api.useCases.create({
         title: title.trim(),
-        analytics_rule_kql: kql.trim(),
+        analytics_rule_kql: kql.trim() || undefined,
         raw_info: rawInfo.trim() || undefined,
       })
 
@@ -69,8 +69,8 @@ export function AddUseCaseForm() {
 
       {/* KQL Rule */}
       <div className="space-y-2">
-        <Label>KQL Rule *</Label>
-        <p className="text-xs text-muted-foreground">Paste your Sentinel analytics rule query.</p>
+        <Label>KQL Rule</Label>
+        <p className="text-xs text-muted-foreground">Paste your Sentinel analytics rule query. Leave blank if not available — the AI will infer the detection logic from your context.</p>
         <div className="border border-border rounded-md overflow-hidden">
           <Editor
             height="260px"

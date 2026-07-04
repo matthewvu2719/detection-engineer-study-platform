@@ -22,15 +22,16 @@ async def create_use_case(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    existing = await db.execute(
-        select(UseCase).where(UseCase.analytics_rule_kql == payload.analytics_rule_kql)
-    )
-    duplicate = existing.scalar_one_or_none()
-    if duplicate:
-        raise HTTPException(
-            status_code=409,
-            detail={"message": "A use case with this KQL already exists.", "existing_id": str(duplicate.id)},
+    if payload.analytics_rule_kql:
+        existing = await db.execute(
+            select(UseCase).where(UseCase.analytics_rule_kql == payload.analytics_rule_kql)
         )
+        duplicate = existing.scalar_one_or_none()
+        if duplicate:
+            raise HTTPException(
+                status_code=409,
+                detail={"message": "A use case with this KQL already exists.", "existing_id": str(duplicate.id)},
+            )
 
     # Merge raw_info into investigation_notes for the enrichment agent to parse
     investigation_notes = payload.investigation_notes

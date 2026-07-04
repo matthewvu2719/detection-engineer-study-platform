@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.models.practice import PracticeChallenge, PracticeSession, Evaluation
-from app.services.mcp_client import ms_learn_tools
+from app.services.mcp_client import get_ms_learn_tools
 from app.services.learning_memory import store_learning_memory
 from app.core.prompts import EVALUATOR_AGENT_SYSTEM, EVALUATOR_AGENT_HUMAN
 
@@ -113,16 +113,17 @@ async def _run_evaluator_agent(
         submitted_kql=submitted_kql,
     )
 
-    async with ms_learn_tools() as tools:
-        agent = create_react_agent(
-            llm,
-            tools,
-            state_modifier=SystemMessage(content=EVALUATOR_AGENT_SYSTEM),
-        )
+    tools = await get_ms_learn_tools()
+    agent = create_react_agent(
+        llm,
+        tools,
+        prompt=SystemMessage(content=EVALUATOR_AGENT_SYSTEM),
+    )
 
-        result = await agent.ainvoke({
-            "messages": [HumanMessage(content=human_message)]
-        })
+    result = await agent.ainvoke(
+        {"messages": [HumanMessage(content=human_message)]},
+        config={"recursion_limit": 12},
+    )
 
     final_message = result["messages"][-1].content
     return _extract_json(final_message)

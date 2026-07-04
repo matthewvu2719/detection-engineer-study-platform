@@ -18,7 +18,7 @@ class UseCase(Base):
     alert_name = Column(Text, nullable=False)
     alert_description = Column(Text)
     analytics_rule_name = Column(Text)
-    analytics_rule_kql = Column(Text, nullable=False)
+    analytics_rule_kql = Column(Text, nullable=True)
     investigation_notes = Column(Text)
     response_notes = Column(Text)
 

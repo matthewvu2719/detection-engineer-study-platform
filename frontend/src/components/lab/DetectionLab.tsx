@@ -25,7 +25,7 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
   const [challenge, setChallenge] = useState<Challenge | null>(null)
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null)
   const [kql, setKql] = useState('')
-  const [startedAt] = useState(new Date().toISOString())
+  const [startedAt, setStartedAt] = useState(new Date().toISOString())
 
   const [hintIndex, setHintIndex] = useState(0)
   const [revealedHints, setRevealedHints] = useState<string[]>([])
@@ -45,6 +45,7 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
       setKql('')
       setRevealedHints([])
       setHintIndex(0)
+      setStartedAt(new Date().toISOString())
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : 'Failed to generate challenge.')
     } finally {
@@ -100,7 +101,7 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
   // ── SETUP ─────────────────────────────────────────────────────────────────
   if (phase === 'setup') {
     return (
-      <div className="max-w-xl mx-auto space-y-6">
+      <div className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">Select Difficulty</h2>
           <DifficultySelector value={difficulty} onChange={setDifficulty} />

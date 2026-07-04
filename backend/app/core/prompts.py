@@ -2,29 +2,27 @@
 
 ENRICHMENT_AGENT_SYSTEM = """You are a Senior Detection Engineer with deep expertise in Microsoft Sentinel and KQL.
 
-Your task is to fully analyze a Sentinel analytics rule and produce structured learning content for Detection Engineering students.
+Your task is to fully analyze a Sentinel detection use case and produce structured learning content for Detection Engineering students.
 
-You have access to the Microsoft Learn MCP tools. Use them to look up:
-- Official documentation for every Sentinel table the KQL query uses (e.g. SigninLogs, SecurityAlert)
-- Official documentation for every KQL operator used (e.g. summarize, arg_max, join, extend)
-- Relevant Microsoft Learn training modules about the detection topic
+You have access to the Microsoft Learn MCP tools.
 
-Search strategy:
-1. Read the KQL rule and identify all tables and non-trivial operators
-2. Call microsoft_docs_search for each table (e.g. "SigninLogs table Microsoft Sentinel columns")
-3. Call microsoft_docs_search for key operators (e.g. "KQL summarize operator")
-4. Call microsoft_docs_search for the detection topic (e.g. "brute force detection Azure AD Sentinel")
-5. After gathering documentation, produce your final structured JSON
+Search strategy (maximum 3 MCP searches total — be selective):
+1. If a KQL rule is provided: identify the primary table and 1-2 key operators.
+   If NO KQL rule is provided: generate an appropriate KQL detection rule from the title and context first.
+2. Call microsoft_docs_search once for the primary table (e.g. "DeviceProcessEvents Microsoft Sentinel")
+3. Call microsoft_docs_search once for the detection topic (e.g. "build process compromise Defender Sentinel")
+4. Optionally call microsoft_docs_search once more for a key operator or concept if truly needed.
+5. Produce your final structured JSON — do not keep searching after 3 calls.
 
-Be precise and ground your explanations in the documentation you retrieved.
-If you cannot determine something from the rule alone, say so explicitly — never invent details.
+Be precise. Use your existing knowledge for common tables and operators; only search for things you are uncertain about.
 
 Your final message MUST be a single valid JSON object with this exact structure:
 {
+  "suggested_kql": "Full KQL rule — use the provided rule if one exists, or generate one if not",
   "detection_purpose": "...",
   "detection_logic": "...",
   "typical_attack_scenarios": "...",
-  "kql_explanation": "Line-by-line explanation...",
+  "kql_explanation": "Line-by-line explanation of the KQL...",
   "tables_used": ["Table1", "Table2"],
   "important_columns": [{"table": "...", "column": "...", "reason": "..."}],
   "entity_mapping": [{"entity_type": "Account|IP|Host|URL|Process|File", "field": "...", "column": "..."}],
@@ -42,7 +40,7 @@ Your final message MUST be a single valid JSON object with this exact structure:
 }"""
 
 
-ENRICHMENT_AGENT_HUMAN = """Analyze this Microsoft Sentinel analytics rule and produce comprehensive learning content.
+ENRICHMENT_AGENT_HUMAN = """Analyze this Microsoft Sentinel detection use case and produce comprehensive learning content.
 
 Title: {alert_name}
 
@@ -54,7 +52,8 @@ User-provided context (freeform — extract alert description, entities, attack 
 
 Additional response notes: {response_notes}
 
-Use the Microsoft Learn MCP tools to look up the tables and operators, then return the full JSON enrichment."""
+If no KQL rule is provided, infer the detection logic from the title and context, and suggest what a typical KQL rule for this scenario would look like.
+Use the Microsoft Learn MCP tools to look up relevant tables, operators, and detection concepts, then return the full JSON enrichment."""
 
 
 # ── Challenge Generator ───────────────────────────────────────────────────────

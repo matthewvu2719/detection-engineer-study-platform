@@ -1,4 +1,6 @@
+import asyncio
 import json
+import logging
 import re
 from datetime import datetime, timezone
 
@@ -10,15 +12,18 @@ from sqlalchemy import select
 from app.config import get_settings
 from app.database import AsyncSessionLocal
 from app.models.use_case import UseCase, InvestigationStep, InvestigationQuery
-from app.services.mcp_client import ms_learn_tools
+from app.services.mcp_client import get_ms_learn_tools
 from app.core.prompts import ENRICHMENT_AGENT_SYSTEM, ENRICHMENT_AGENT_HUMAN
 
+logger = logging.getLogger(__name__)
 settings = get_settings()
+
+MCP_TIMEOUT = 90  # seconds before falling back to LLM-only enrichment
 
 
 def _get_llm() -> ChatOpenAI:
     return ChatOpenAI(
-        model=settings.openai_model,
+        model=settings.openai_enrichment_model,
         api_key=settings.openai_api_key,
         temperature=0.2,
     )
@@ -40,6 +45,7 @@ async def enrich_use_case(use_case_id: str) -> None:
             uc.enrichment_status = "completed"
             uc.enriched_at = datetime.now(timezone.utc)
         except Exception as exc:
+            logger.exception("Enrichment failed for use_case_id=%s", use_case_id)
             uc.enrichment_status = "failed"
             uc.enrichment_error = str(exc)[:500]
 
@@ -47,40 +53,54 @@ async def enrich_use_case(use_case_id: str) -> None:
 
 
 async def _run_enrichment_agent(uc: UseCase) -> dict:
-    """
-    LangGraph ReAct agent that:
-    1. Reads the KQL rule and identifies tables + operators
-    2. Uses microsoft_docs_search / microsoft_docs_fetch MCP tools to retrieve
-       official Microsoft Learn documentation for each
-    3. Produces a structured JSON enrichment grounded in real docs
-    """
     llm = _get_llm()
 
+    notes = uc.investigation_notes or "Not provided"
     human_message = ENRICHMENT_AGENT_HUMAN.format(
         alert_name=uc.alert_name,
-        alert_description=uc.alert_description or "Not provided",
-        analytics_rule_name=uc.analytics_rule_name or "Not provided",
-        kql=uc.analytics_rule_kql,
-        investigation_notes=uc.investigation_notes or "Not provided",
-        response_notes=uc.response_notes or "Not provided",
+        kql=uc.analytics_rule_kql or "Not provided — infer from context.",
+        investigation_notes=notes[:3000] + ("…[truncated]" if len(notes) > 3000 else ""),
+        response_notes=(uc.response_notes or "Not provided")[:1000],
     )
 
-    async with ms_learn_tools() as tools:
+    # Try MCP-grounded enrichment first; fall back to LLM-only if it times out
+    try:
+        tools = await asyncio.wait_for(get_ms_learn_tools(), timeout=15)
         agent = create_react_agent(
             llm,
             tools,
-            state_modifier=SystemMessage(content=ENRICHMENT_AGENT_SYSTEM),
+            prompt=SystemMessage(content=ENRICHMENT_AGENT_SYSTEM),
         )
-
-        result = await agent.ainvoke({
-            "messages": [HumanMessage(content=human_message)]
-        })
+        result = await asyncio.wait_for(
+            agent.ainvoke(
+                {"messages": [HumanMessage(content=human_message)]},
+                config={"recursion_limit": 16},
+            ),
+            timeout=MCP_TIMEOUT,
+        )
+        logger.info("Enrichment completed with MCP for use_case_id=%s", uc.id)
+    except (asyncio.TimeoutError, Exception) as exc:
+        logger.warning("MCP enrichment timed out or failed (%s), falling back to LLM-only", exc)
+        result = await _run_llm_only(llm, human_message)
 
     final_message = result["messages"][-1].content
     return _extract_json(final_message)
 
 
+async def _run_llm_only(llm: ChatOpenAI, human_message: str) -> dict:
+    """Fallback: plain LLM call with no MCP tools — always fast."""
+    messages = [
+        SystemMessage(content=ENRICHMENT_AGENT_SYSTEM),
+        HumanMessage(content=human_message),
+    ]
+    response = await llm.ainvoke(messages)
+    return {"messages": [response]}
+
+
 async def _apply_enrichment(db, uc: UseCase, data: dict) -> None:
+    if not uc.analytics_rule_kql and data.get("suggested_kql"):
+        uc.analytics_rule_kql = data["suggested_kql"]
+
     uc.detection_purpose = data.get("detection_purpose")
     uc.detection_logic = data.get("detection_logic")
     uc.typical_attack_scenarios = data.get("typical_attack_scenarios")
@@ -121,19 +141,15 @@ async def _apply_enrichment(db, uc: UseCase, data: dict) -> None:
 
 
 def _extract_json(text: str) -> dict:
-    """Extract JSON object from agent's final message."""
-    # Try direct parse first
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # Extract from markdown code block
     match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
     if match:
         return json.loads(match.group(1))
 
-    # Find the first { ... } block
     match = re.search(r"\{.*\}", text, re.DOTALL)
     if match:
         return json.loads(match.group(0))

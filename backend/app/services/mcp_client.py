@@ -1,4 +1,3 @@
-from contextlib import asynccontextmanager
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
 MS_LEARN_SERVER = {
@@ -9,15 +8,6 @@ MS_LEARN_SERVER = {
 }
 
 
-@asynccontextmanager
-async def ms_learn_tools():
-    """
-    Async context manager that yields a list of LangChain tools
-    backed by the Microsoft Learn MCP server.
-
-    Usage:
-        async with ms_learn_tools() as tools:
-            agent = create_react_agent(llm, tools)
-    """
-    async with MultiServerMCPClient(MS_LEARN_SERVER) as client:
-        yield client.get_tools()
+async def get_ms_learn_tools():
+    client = MultiServerMCPClient(MS_LEARN_SERVER)
+    return await client.get_tools()

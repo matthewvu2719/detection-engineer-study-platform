@@ -6,7 +6,7 @@ from datetime import datetime
 
 class UseCaseCreate(BaseModel):
     title: str
-    analytics_rule_kql: str
+    analytics_rule_kql: Optional[str] = None
     raw_info: Optional[str] = None  # freeform paste: description, entities, notes, etc.
     alert_name: Optional[str] = None  # defaults to title if not provided
     alert_description: Optional[str] = None
@@ -71,7 +71,7 @@ class UseCaseDetail(BaseModel):
     alert_name: str
     alert_description: Optional[str]
     analytics_rule_name: Optional[str]
-    analytics_rule_kql: str
+    analytics_rule_kql: Optional[str]
     investigation_notes: Optional[str]
     response_notes: Optional[str]
 

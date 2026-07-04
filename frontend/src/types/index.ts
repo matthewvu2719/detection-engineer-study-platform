@@ -39,7 +39,7 @@ export interface UseCaseListItem {
 export interface UseCaseDetail extends UseCaseListItem {
   alert_description: string | null
   analytics_rule_name: string | null
-  analytics_rule_kql: string
+  analytics_rule_kql: string | null
   investigation_notes: string | null
   response_notes: string | null
 
@@ -112,7 +112,7 @@ export interface UseCaseListResponse {
 
 export interface UseCaseCreatePayload {
   title: string
-  analytics_rule_kql: string
+  analytics_rule_kql?: string
   raw_info?: string
   alert_name?: string
   alert_description?: string

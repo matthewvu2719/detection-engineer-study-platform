@@ -14,7 +14,8 @@ interface PageProps {
   params: Promise<{ id: string }>
 }
 
-function KqlBlock({ kql }: { kql: string }) {
+function KqlBlock({ kql }: { kql: string | null }) {
+  if (!kql) return <p className="text-sm text-muted-foreground italic">No KQL rule provided.</p>
   return (
     <pre className="bg-muted rounded-md p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap">
       {kql}
