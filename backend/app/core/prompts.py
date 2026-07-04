@@ -44,15 +44,15 @@ Your final message MUST be a single valid JSON object with this exact structure:
 
 ENRICHMENT_AGENT_HUMAN = """Analyze this Microsoft Sentinel analytics rule and produce comprehensive learning content.
 
-Alert Name: {alert_name}
-Alert Description: {alert_description}
-Analytics Rule Name: {analytics_rule_name}
+Title: {alert_name}
 
 KQL Rule:
 {kql}
 
-Investigation Notes: {investigation_notes}
-Response Notes: {response_notes}
+User-provided context (freeform — extract alert description, entities, attack scenario, investigation steps, response actions, and any other relevant details from this):
+{investigation_notes}
+
+Additional response notes: {response_notes}
 
 Use the Microsoft Learn MCP tools to look up the tables and operators, then return the full JSON enrichment."""
 
@@ -95,14 +95,28 @@ Difficulty: {difficulty}
 - Medium: 2 tables with join, time window, summarize
 - Hard: complex correlation, multiple tables, performance-conscious logic
 
+CRITICAL: You MUST only use real Microsoft Sentinel tables. Never invent table names.
+Allowed tables (pick only from this list):
+SigninLogs, AADNonInteractiveUserSignInLogs, AADServicePrincipalSignInLogs,
+AADManagedIdentitySignInLogs, AuditLogs, IdentityLogonEvents, IdentityQueryEvents,
+IdentityDirectoryEvents, BehaviorAnalytics, SecurityAlert, SecurityIncident,
+SecurityEvent, WindowsEvent, Syslog, CommonSecurityLog, AzureActivity,
+AzureDiagnostics, OfficeActivity, MicrosoftGraphActivityLogs, ThreatIntelligenceIndicator,
+DeviceEvents, DeviceProcessEvents, DeviceNetworkEvents, DeviceFileEvents,
+DeviceRegistryEvents, DeviceLogonEvents, DeviceImageLoadEvents, DeviceInfo,
+DeviceNetworkInfo, AlertInfo, AlertEvidence, EmailEvents, EmailAttachmentInfo,
+EmailUrlInfo, EmailPostDeliveryEvents, CloudAppEvents, DnsEvents,
+StorageBlobLogs, KeyVaultData, AWSCloudTrail, AzureFirewallApplicationRule,
+AzureFirewallNetworkRule, W3CIISLog, NetworkAccessTraffic
+
 Return a single valid JSON object:
 {{
   "scenario": "Detailed attack scenario description",
   "objectives": ["objective 1", "objective 2"],
-  "available_tables": ["Table1", "Table2"],
+  "available_tables": ["RealSentinelTable1", "RealSentinelTable2"],
   "expected_entities": ["Account: suspicious user", "IP: attacker IP"],
   "hints": ["subtle hint", "more specific hint", "direct hint"],
-  "reference_kql": "// Full KQL solution with inline comments\\nTableName\\n| where ...",
+  "reference_kql": "// Full KQL solution with inline comments\\nRealTableName\\n| where ...",
   "tags": ["tag1", "tag2"]
 }}"""
 

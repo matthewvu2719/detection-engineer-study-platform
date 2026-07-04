@@ -112,10 +112,11 @@ export interface UseCaseListResponse {
 
 export interface UseCaseCreatePayload {
   title: string
-  alert_name: string
+  analytics_rule_kql: string
+  raw_info?: string
+  alert_name?: string
   alert_description?: string
   analytics_rule_name?: string
-  analytics_rule_kql: string
   investigation_notes?: string
   response_notes?: string
   category?: string

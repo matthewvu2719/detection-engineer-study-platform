@@ -32,13 +32,21 @@ async def create_use_case(
             detail={"message": "A use case with this KQL already exists.", "existing_id": str(duplicate.id)},
         )
 
+    # Merge raw_info into investigation_notes for the enrichment agent to parse
+    investigation_notes = payload.investigation_notes
+    if payload.raw_info:
+        investigation_notes = (
+            f"[User provided context — extract description, entities, notes from this]\n{payload.raw_info}"
+            + (f"\n\n[Additional notes]\n{investigation_notes}" if investigation_notes else "")
+        )
+
     use_case = UseCase(
         title=payload.title,
-        alert_name=payload.alert_name,
+        alert_name=payload.alert_name or payload.title,
         alert_description=payload.alert_description,
         analytics_rule_name=payload.analytics_rule_name,
         analytics_rule_kql=payload.analytics_rule_kql,
-        investigation_notes=payload.investigation_notes,
+        investigation_notes=investigation_notes,
         response_notes=payload.response_notes,
         category=payload.category,
         severity=payload.severity,
