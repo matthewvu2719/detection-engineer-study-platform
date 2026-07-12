@@ -8,7 +8,7 @@ import math
 from app.database import get_db
 from app.models.use_case import UseCase, Tag, UseCaseTag, InvestigationStep, InvestigationQuery
 from app.schemas.use_case import (
-    UseCaseCreate, UseCaseDetail, UseCaseListItem,
+    UseCaseCreate, UseCaseUpdate, UseCaseDetail, UseCaseListItem,
     UseCaseListResponse, EnrichmentJobResponse
 )
 from app.services.ai_enrichment import enrich_use_case
@@ -154,6 +154,47 @@ async def get_use_case(use_case_id: UUID, db: AsyncSession = Depends(get_db)):
     if not uc:
         raise HTTPException(status_code=404, detail="Use case not found")
     return uc
+
+
+@router.patch("/{use_case_id}", response_model=UseCaseDetail)
+async def update_use_case(
+    use_case_id: UUID,
+    payload: UseCaseUpdate,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(UseCase).where(UseCase.id == use_case_id))
+    uc = result.scalar_one_or_none()
+    if not uc:
+        raise HTTPException(status_code=404, detail="Use case not found")
+
+    content_changed = False
+
+    if payload.title is not None:
+        uc.title = payload.title
+        if uc.alert_name == uc.title or not uc.alert_name:
+            uc.alert_name = payload.title
+
+    if payload.analytics_rule_kql is not None:
+        new_kql = payload.analytics_rule_kql.strip() or None
+        if new_kql != uc.analytics_rule_kql:
+            uc.analytics_rule_kql = new_kql
+            content_changed = True
+
+    if payload.raw_info is not None:
+        raw = payload.raw_info.strip()
+        uc.investigation_notes = f"[User-provided context]\n{raw}" if raw else None
+        content_changed = True
+
+    if content_changed:
+        uc.enrichment_status = "pending"
+        uc.enrichment_error = None
+        await db.commit()
+        background_tasks.add_task(enrich_use_case, str(uc.id))
+    else:
+        await db.commit()
+
+    return await _load_use_case(db, use_case_id)
 
 
 @router.delete("/{use_case_id}", status_code=204)

@@ -43,7 +43,8 @@ class UseCase(Base):
 
     learn_recommendations = Column(JSONB, default=list)
     related_concepts = Column(JSONB, default=list)
-    kql_operators_to_study = Column(JSONB, default=list)
+    kql_operators_to_study = Column(JSONB, default=list)   # functions/operators used in detection rule
+    investigation_functions = Column(JSONB, default=list)  # functions/operators used in investigation queries
 
     enrichment_status = Column(Text, default="pending")
     enrichment_error = Column(Text)
@@ -86,6 +87,7 @@ class InvestigationStep(Base):
     step_order = Column(Integer, nullable=False)
     title = Column(Text, nullable=False)
     description = Column(Text)
+    kql = Column(Text)
     pivot_type = Column(Text)
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
 

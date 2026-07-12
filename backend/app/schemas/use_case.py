@@ -26,17 +26,8 @@ class InvestigationStepOut(BaseModel):
     step_order: int
     title: str
     description: Optional[str]
+    kql: Optional[str]
     pivot_type: Optional[str]
-
-    model_config = {"from_attributes": True}
-
-
-class InvestigationQueryOut(BaseModel):
-    id: UUID
-    title: str
-    description: Optional[str]
-    kql: str
-    query_order: int
 
     model_config = {"from_attributes": True}
 
@@ -97,6 +88,7 @@ class UseCaseDetail(BaseModel):
     learn_recommendations: list[Any] = Field(default_factory=list)
     related_concepts: list[Any] = Field(default_factory=list)
     kql_operators_to_study: list[Any] = Field(default_factory=list)
+    investigation_functions: list[Any] = Field(default_factory=list)
 
     enrichment_status: str
     enriched_at: Optional[datetime]
@@ -106,9 +98,14 @@ class UseCaseDetail(BaseModel):
 
     tags: list[TagOut] = Field(default_factory=list)
     investigation_steps: list[InvestigationStepOut] = Field(default_factory=list)
-    investigation_queries: list[InvestigationQueryOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
+
+
+class UseCaseUpdate(BaseModel):
+    title: Optional[str] = None
+    analytics_rule_kql: Optional[str] = None
+    raw_info: Optional[str] = None
 
 
 class UseCaseSearchParams(BaseModel):

@@ -11,15 +11,8 @@ export interface InvestigationStep {
   step_order: number
   title: string
   description: string | null
+  kql: string | null
   pivot_type: string | null
-}
-
-export interface InvestigationQuery {
-  id: string
-  title: string
-  description: string | null
-  kql: string
-  query_order: number
 }
 
 export interface UseCaseListItem {
@@ -49,8 +42,8 @@ export interface UseCaseDetail extends UseCaseListItem {
   kql_explanation: string | null
 
   entity_mapping: EntityMapping[]
-  tables_used: string[]
-  important_columns: ImportantColumn[]
+  tables_used: TableReference[]
+  important_columns: ColumnReference[]
   benign_indicators: Indicator[]
   malicious_indicators: Indicator[]
   classification_guidance: string | null
@@ -60,24 +53,33 @@ export interface UseCaseDetail extends UseCaseListItem {
   learn_recommendations: LearnModule[]
   related_concepts: string[]
   kql_operators_to_study: string[]
+  investigation_functions: string[]
 
   enriched_at: string | null
   updated_at: string
 
   investigation_steps: InvestigationStep[]
-  investigation_queries: InvestigationQuery[]
+}
+
+export interface TableReference {
+  name: string
+  definition: string | null
+  doc_url: string | null
+  context: 'detection' | 'investigation' | 'both'
+}
+
+export interface ColumnReference {
+  table: string
+  column: string
+  reason: string
+  doc_url: string | null
+  context: 'detection' | 'investigation' | 'both'
 }
 
 export interface EntityMapping {
   entity_type: string
   field: string
   column: string
-}
-
-export interface ImportantColumn {
-  table: string
-  column: string
-  reason: string
 }
 
 export interface Indicator {
@@ -108,6 +110,12 @@ export interface UseCaseListResponse {
   page: number
   page_size: number
   total_pages: number
+}
+
+export interface UseCaseUpdatePayload {
+  title?: string
+  analytics_rule_kql?: string
+  raw_info?: string
 }
 
 export interface UseCaseCreatePayload {

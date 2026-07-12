@@ -10,14 +10,15 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import Editor from '@monaco-editor/react'
 import { registerKqlCompletions } from '@/lib/kql-completions'
-import { api, ApiError } from '@/lib/api'
+import { api } from '@/lib/api'
+import type { UseCaseDetail } from '@/types'
 
-export function AddUseCaseForm() {
+export function EditUseCaseForm({ uc }: { uc: UseCaseDetail }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [title, setTitle] = useState('')
-  const [kql, setKql] = useState('')
-  const [rawInfo, setRawInfo] = useState('')
+  const [title, setTitle] = useState(uc.title)
+  const [kql, setKql] = useState(uc.analytics_rule_kql ?? '')
+  const [rawInfo, setRawInfo] = useState(uc.investigation_notes ?? '')
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,29 +26,18 @@ export function AddUseCaseForm() {
       toast.error('Title is required.')
       return
     }
-
     setLoading(true)
     try {
-      const uc = await api.useCases.create({
+      await api.useCases.update(String(uc.id), {
         title: title.trim(),
         analytics_rule_kql: kql.trim() || undefined,
         raw_info: rawInfo.trim() || undefined,
       })
-
-      toast.success('Use case created! AI enrichment is running in the background.')
+      toast.success('Saved! Re-enrichment is running in the background.')
+      router.refresh()
       router.push(`/library/${uc.id}`)
-    } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 409 && err.detail?.existing_id) {
-        toast.warning('This KQL rule already exists in your library.', {
-          action: {
-            label: 'View it',
-            onClick: () => router.push(`/library/${err.detail!.existing_id}`),
-          },
-          duration: 8000,
-        })
-      } else {
-        toast.error(err instanceof Error ? err.message : 'Something went wrong.')
-      }
+    } catch {
+      toast.error('Failed to save changes.')
     } finally {
       setLoading(false)
     }
@@ -55,22 +45,19 @@ export function AddUseCaseForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
-      {/* Title */}
       <div className="space-y-2">
         <Label htmlFor="title">Use Case Title *</Label>
         <Input
           id="title"
-          placeholder="e.g. Brute Force Attack on Azure AD"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
         />
       </div>
 
-      {/* KQL Rule */}
       <div className="space-y-2">
         <Label>KQL Rule</Label>
-        <p className="text-xs text-muted-foreground">Paste your Sentinel analytics rule query. Leave blank if not available — the AI will infer the detection logic from your context.</p>
+        <p className="text-xs text-muted-foreground">Leave blank to let the AI infer the detection logic.</p>
         <div className="border border-border rounded-md overflow-hidden">
           <Editor
             height="260px"
@@ -97,12 +84,11 @@ export function AddUseCaseForm() {
         </div>
       </div>
 
-      {/* Investigation Notes */}
       <div className="space-y-2">
         <Label htmlFor="raw_info">Investigation Notes</Label>
         <p className="text-xs text-muted-foreground">
-          Write your own investigation steps or playbook. If provided, the AI will use these directly as the investigation steps.
-          If left blank, the AI will generate steps from the detection context.
+          Your investigation steps or playbook. If provided, these are used directly as the investigation steps.
+          If cleared, the AI will generate steps from the detection context.
         </p>
         <Textarea
           id="raw_info"
@@ -113,19 +99,23 @@ export function AddUseCaseForm() {
         />
       </div>
 
-      <Button type="submit" disabled={loading} size="lg" className="gap-2">
-        {loading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Saving & enriching...
-          </>
-        ) : (
-          <>
-            <Sparkles className="h-4 w-4" />
-            Save & Enrich with AI
-          </>
-        )}
-      </Button>
+      <div className="flex gap-3">
+        <Button type="submit" disabled={loading} className="gap-2">
+          {loading ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+          ) : (
+            <><Sparkles className="h-4 w-4" /> Save & Re-enrich</>
+          )}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => router.push(`/library/${uc.id}`)}
+          disabled={loading}
+        >
+          Cancel
+        </Button>
+      </div>
     </form>
   )
 }

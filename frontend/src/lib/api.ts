@@ -1,5 +1,6 @@
 import type {
   UseCaseCreatePayload,
+  UseCaseUpdatePayload,
   UseCaseDetail,
   UseCaseListResponse,
   Challenge,
@@ -33,6 +34,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {}
     throw new ApiError(res.status, message, detail)
   }
+  if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
 }
 
@@ -55,6 +57,13 @@ export const api = {
     create(payload: UseCaseCreatePayload): Promise<UseCaseDetail> {
       return request<UseCaseDetail>('/use-cases/', {
         method: 'POST',
+        body: JSON.stringify(payload),
+      })
+    },
+
+    update(id: string, payload: UseCaseUpdatePayload): Promise<UseCaseDetail> {
+      return request<UseCaseDetail>(`/use-cases/${id}`, {
+        method: 'PATCH',
         body: JSON.stringify(payload),
       })
     },
