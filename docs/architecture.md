@@ -235,7 +235,67 @@ POST /api/practice/hint
 
 ---
 
-## 7. Learning memory (pgvector RAG)
+## 7. LLM call patterns — ReAct vs. plain
+
+The app uses two distinct patterns for calling LLMs. Knowing which is which matters for understanding latency, tool access, and failure modes.
+
+### Plain `llm.ainvoke()` calls (three places)
+
+A single prompt-in / JSON-out call. No tool loop, no iteration. Fast (~5–15s) and cheap.
+
+| Service | Model | Purpose |
+|---------|-------|---------|
+| `ai_enrichment._run_enrichment()` | gpt-4o-mini | Analyze a use case and return the full enrichment JSON in one shot |
+| `challenge_generator._analyze_weaknesses()` | gpt-4o | Read past session summaries and return a `{weak_concepts, strong_concepts, coaching_notes}` profile |
+| `challenge_generator._generate_challenge_data()` | gpt-4o | Generate a scenario, objectives, tables, hints, and reference KQL for a practice challenge |
+
+All three use `response_format={"type": "json_object"}` (enrichment) or rely on the prompt instructing the model to return valid JSON. They do **not** have access to tools — any external data (MCP docs, DB records) is fetched before or after the call, never during.
+
+### ReAct agent — KQL evaluator
+
+**One agent in the entire codebase**, in `services/kql_evaluator.py`.
+
+```
+create_react_agent(
+    llm=gpt-4o (temperature=0.1),
+    tools=[microsoft_docs_search],       ← MCP tool from learn.microsoft.com/api/mcp
+    prompt=SystemMessage(EVALUATOR_AGENT_SYSTEM),
+    recursion_limit=12,
+)
+```
+
+**What ReAct means here:** the agent runs a Reason → Act → Observe loop managed by LangGraph. On each turn it either:
+- Calls `microsoft_docs_search` with a query (e.g. `"KQL summarize operator Microsoft Sentinel"`)
+- Or returns a final JSON message (the evaluation)
+
+It decides for itself how many searches to run and on what terms — typically 1–3 calls targeting the specific KQL concepts the student missed.
+
+**Why ReAct here and not a plain call?**
+The evaluator needs to look up real Microsoft Learn URLs for the *specific* concepts a student got wrong — concepts that aren't known until the agent has reasoned about the submission. A plain call can't make tool calls mid-reasoning; the ReAct loop lets the agent decide "this student struggled with `join` — let me search for that specifically" before constructing the final output.
+
+**Agent loop (simplified):**
+```
+Input: challenge scenario + reference KQL + student's submitted KQL
+  │
+  ▼
+Reason: compare submission vs. reference, identify gaps
+  │
+  ▼  [0–3 tool calls]
+Act:   microsoft_docs_search("KQL where clause Sentinel")
+       microsoft_docs_search("SigninLogs table schema")
+  │
+  ▼
+Observe: incorporate search results
+  │
+  ▼
+Return: JSON — scores, strengths, weaknesses, learn_modules (with real URLs), learning_summary
+```
+
+**Output** goes through `_extract_json()` (handles raw JSON, fenced code blocks, and loose `{}` fallback), then is validated by Pydantic's `EvaluationOut` schema. A `coerce_to_list` field validator handles cases where the LLM returns a string for a field declared as `list[str]`.
+
+---
+
+## 8. Learning memory (pgvector RAG)
 
 After each practice evaluation, if a `user_id` is set, `store_learning_memory()` embeds `evaluation.learning_summary` using `text-embedding-3-small` (1536-dim) and inserts it into `PracticeMemory` with the associated weak/strong concepts and score.
 
@@ -252,7 +312,7 @@ The retrieved summaries are fed into the challenge generator's weakness analysis
 
 ---
 
-## 8. Backend API
+## 9. Backend API
 
 `app/main.py`, run with `uvicorn app.main:app --reload` (port 8000). CORS locked to `http://localhost:3000`.
 
@@ -276,7 +336,7 @@ The retrieved summaries are fed into the challenge generator's weakness analysis
 
 ---
 
-## 9. Frontend
+## 10. Frontend
 
 Four pages, all under the App Router:
 
@@ -297,7 +357,7 @@ Four pages, all under the App Router:
 
 ---
 
-## 10. What's real vs. pending
+## 11. What's real vs. pending
 
 | Component | Status |
 |-----------|--------|
@@ -316,7 +376,7 @@ Four pages, all under the App Router:
 
 ---
 
-## 11. Open design questions / known gaps
+## 12. Open design questions / known gaps
 
 - **Auth is the unlock for most personalization.** Clerk is the planned provider. Once `user_id` is set, learning memory starts accumulating, challenge generation becomes weakness-targeted across sessions, and the public/private use case flag becomes meaningful.
 
