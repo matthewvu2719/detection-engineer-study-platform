@@ -20,7 +20,7 @@ export function EditUseCaseForm({ uc }: { uc: UseCaseDetail }) {
   const [kql, setKql] = useState(uc.analytics_rule_kql ?? '')
   const [rawInfo, setRawInfo] = useState(uc.investigation_notes ?? '')
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!title.trim()) {
       toast.error('Title is required.')
@@ -70,7 +70,7 @@ export function EditUseCaseForm({ uc }: { uc: UseCaseDetail }) {
               minimap: { enabled: false },
               fontSize: 13,
               lineNumbers: 'on',
-              scrollBeyondLastLine: false,
+              scrollBeyondLastLine: true,
               wordWrap: 'on',
               automaticLayout: true,
               tabSize: 4,

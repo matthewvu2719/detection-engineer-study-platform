@@ -19,7 +19,7 @@ export function AddUseCaseForm() {
   const [kql, setKql] = useState('')
   const [rawInfo, setRawInfo] = useState('')
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!title.trim()) {
       toast.error('Title is required.')
@@ -83,7 +83,7 @@ export function AddUseCaseForm() {
               minimap: { enabled: false },
               fontSize: 13,
               lineNumbers: 'on',
-              scrollBeyondLastLine: false,
+              scrollBeyondLastLine: true,
               wordWrap: 'on',
               automaticLayout: true,
               tabSize: 4,

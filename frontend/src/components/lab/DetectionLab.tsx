@@ -31,7 +31,7 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
   const [revealedHints, setRevealedHints] = useState<string[]>([])
   const [loadingHint, setLoadingHint] = useState(false)
 
-  const [showReference, setShowReference] = useState(false)
+  const [submittedKql, setSubmittedKql] = useState('')
 
   async function handleGenerate() {
     setGenerating(true)
@@ -60,6 +60,7 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
     }
     setSubmitting(true)
     try {
+      setSubmittedKql(kql)
       const ev = await api.practice.submitKql({
         challenge_id: challenge.id,
         submitted_kql: kql,
@@ -201,7 +202,7 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
                 minimap: { enabled: false },
                 fontSize: 14,
                 lineNumbers: 'on',
-                scrollBeyondLastLine: false,
+                scrollBeyondLastLine: true,
                 wordWrap: 'on',
                 automaticLayout: true,
                 tabSize: 4,
@@ -285,45 +286,21 @@ export function DetectionLab({ initialUseCaseId }: { initialUseCaseId?: string }
           )}
         </div>
 
-        {evaluation.missing_logic.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Missing Logic</CardTitle></CardHeader>
-            <CardContent>
-              <ul className="space-y-1">
-                {evaluation.missing_logic.map((m, i) => (
-                  <li key={i} className="text-sm text-muted-foreground flex gap-2">
-                    <span>→</span>{m}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
-        {evaluation.suggested_improvements.length > 0 && (
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Suggested Improvements</CardTitle></CardHeader>
-            <CardContent>
-              <ul className="space-y-2">
-                {evaluation.suggested_improvements.map((s, i) => (
-                  <li key={i} className="text-sm leading-relaxed">{s}</li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Reference solution */}
+        {/* Query comparison */}
         {evaluation.reference_solution && (
-          <div className="space-y-2">
-            <Button variant="outline" size="sm" onClick={() => setShowReference((v) => !v)}>
-              {showReference ? 'Hide' : 'Show'} Reference Solution
-            </Button>
-            {showReference && (
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your Attempt</p>
               <pre className="bg-muted rounded-md p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap">
+                {submittedKql || '(empty)'}
+              </pre>
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-xs font-medium text-green-400 uppercase tracking-wide">Reference Solution</p>
+              <pre className="bg-muted rounded-md p-4 overflow-x-auto text-sm font-mono whitespace-pre-wrap border border-green-500/20">
                 {evaluation.reference_solution}
               </pre>
-            )}
+            </div>
           </div>
         )}
 

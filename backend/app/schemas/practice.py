@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, Any
 from uuid import UUID
 from datetime import datetime
@@ -50,6 +50,13 @@ class EvaluationOut(BaseModel):
     learn_modules: list[Any]
     learning_summary: str
     created_at: datetime
+
+    @field_validator('strengths', 'weaknesses', 'missing_logic', 'suggested_improvements', 'recommended_concepts', mode='before')
+    @classmethod
+    def coerce_to_list(cls, v: object) -> list:
+        if isinstance(v, str):
+            return [v] if v.strip() else []
+        return v or []
 
     model_config = {"from_attributes": True}
 
