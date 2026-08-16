@@ -10,8 +10,8 @@ from app.schemas.practice import (
     KQLSubmission, EvaluationOut,
     HintRequest, HintResponse,
 )
-from app.services.challenge_generator import generate_challenge
-from app.services.kql_evaluator import evaluate_submission
+from app.agents.challenge_graph import run_challenge_graph
+from app.agents.evaluation_graph import run_evaluation_graph
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ async def create_challenge(
     payload: ChallengeRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    challenge = await generate_challenge(
+    challenge = await run_challenge_graph(
         db=db,
         difficulty=payload.difficulty,
         source_use_case_id=payload.source_use_case_id,
@@ -47,7 +47,7 @@ async def submit_kql(
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        _, evaluation = await evaluate_submission(
+        _, evaluation = await run_evaluation_graph(
             db=db,
             challenge_id=payload.challenge_id,
             submitted_kql=payload.submitted_kql,
